@@ -1,14 +1,11 @@
 name: Deploy Python App
-
 on:
   push:
     branches:
       - main
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -24,8 +21,12 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -r . ubuntu@${{ secrets.EC2_IP }}:/home/ubuntu/app
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ubuntu@${{ secrets.EC2_IP }} << 'EOF'
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+
+          scp -i key.pem -o StrictHostKeyChecking=no -r . ubuntu@${{ secrets.EC2_IP }}:/home/ubuntu/app
+          ssh -i key.pem -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_IP }} << 'EOF'
             cd /home/ubuntu/app
             nohup python3 app.py &
           EOF
+ 
